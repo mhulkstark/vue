@@ -7,7 +7,7 @@ import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
 // 导入公共样式
-import '@/assets/base.css'
+import '@/assets/base.less'
 
 // 安装elementui插件
 Vue.use(ElementUI)
