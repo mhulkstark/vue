@@ -30,7 +30,7 @@
       </el-table-column>
       <el-table-column label="操作">
         <template slot-scope="scope">
-          <el-button type="primary" icon="el-icon-edit" plain size="mini"></el-button>
+          <el-button type="primary" icon="el-icon-edit" plain size="mini" @click="showEditDialog(scope.row)"></el-button>
           <el-button
             type="danger"
             icon="el-icon-delete"
@@ -60,24 +60,47 @@
         background
         :total="total">
       </el-pagination>
-      <el-dialog title="添加用户" :visible.sync="addDialogVisible"  width="40%">
-        <el-form ref="addForm" :model="addForm" label-with="80px" :rules="rules" status-icon>
-          <el-form-item label="用户名" prop="username">
-            <el-input v-model="addForm.username" placeholder="请输入用户名"></el-input>
-          </el-form-item>
-          <el-form-item label="密码" prop="password" status-icon>
-            <el-input v-model="addForm.password" placeholder="请输入密码" type="password"></el-input>
-          </el-form-item>
-          <el-form-item label="邮箱" prop="email">
-            <el-input v-model="addForm.email" placeholder="请输入邮箱"></el-input>
-          </el-form-item>
-          <el-form-item label="手机" prop="mobile">
-            <el-input v-model="addForm.mobile" placeholder="请输入手机号"></el-input>
-          </el-form-item>
-        </el-form>
+          <!-- 添加用户的对话框 -->
+          <!--
+            el-dialog：整个对话框组件
+            visible： 对话框是否可见
+          -->
+        <el-dialog title="添加用户" :visible.sync="addDialogVisible" width="40%">
+          <el-form ref="addForm" :model="addForm" label-width="80px" :rules="rules" status-icon>
+            <el-form-item label="用户名" prop="username">
+              <el-input v-model="addForm.username" placeholder="请输入用户名"></el-input>
+            </el-form-item>
+            <el-form-item label="密码" prop="password">
+              <el-input v-model="addForm.password" placeholder="请输入密码" type="password"></el-input>
+            </el-form-item>
+            <el-form-item label="邮箱" prop="email">
+              <el-input v-model="addForm.email" placeholder="请输入用户邮箱"></el-input>
+            </el-form-item>
+            <el-form-item label="手机" prop="mobile">
+              <el-input v-model="addForm.mobile" placeholder="请输入用户手机"></el-input>
+            </el-form-item>
+          </el-form>
         <span slot="footer" class="dialog-footer">
           <el-button @click="addDialogVisible = false">取 消</el-button>
           <el-button type="primary" @click="addUser">确 定</el-button>
+        </span>
+      </el-dialog>
+      <!-- 修改用户 -->
+      <el-dialog title="修改用户" :visible.sync="editDialogVisible" width="40%">
+        <el-form ref="editForm" :model="editForm" label-width="80px" :rules="rules" status-icon>
+          <el-form-item label="用户名">
+            <el-input v-model="editForm.username" placeholder="输入用户名" disabled></el-input>
+          </el-form-item>
+          <el-form-item label="手机号" prop="mobile">
+            <el-input v-model="editForm.mobile" placeholder="输入合法手机号"></el-input>
+          </el-form-item>
+          <el-form-item label="邮箱" prop="email">
+            <el-input v-model="editForm.email" placeholder="输入邮箱"></el-input>
+          </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="editDialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="editUser">确 定</el-button>
         </span>
       </el-dialog>
   </div>
@@ -95,6 +118,7 @@ export default {
       currentPage: 1,
       pageSize: 2,
       total: 0,
+      // 控制添加用户的对话框的显示与隐藏
       addDialogVisible: false,
       addForm: {
         username: '',
@@ -104,22 +128,30 @@ export default {
       },
       rules: {
         username: [
-          { required: true, message: '用户名不为空', trigger: 'blur' },
+          { required: true, message: '用户名不能为空', trigger: 'blur' },
           { min: 3, max: 9, message: '用户名长度在3-9位', trigger: 'blur' }
         ],
         password: [
-          { required: true, message: '密码不为空', trigger: 'blur' },
+          { required: true, message: '密码不能为空', trigger: 'blur' },
           { min: 6, max: 12, message: '密码长度在6-12位', trigger: 'blur' }
         ],
         email: [
-          { type: 'email', message: '请输入正确的邮箱模式', trigger: 'blur' }
+          { type: 'email', message: '请输入一个合法的邮箱', trigger: 'blur' }
         ],
         mobile: [
           {
             pattern: /^1\d{10}$/,
-            message: '手机号不合法',
-            trigger: 'blur' }
+            message: '请输入一个合法的手机号',
+            trigger: 'blur'
+          }
         ]
+      },
+      editDialogVisible: false,
+      editForm: {
+        id: '',
+        username: '',
+        email: '',
+        mobile: ''
       }
     }
   },
@@ -165,7 +197,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        this.axios({
+        return this.axios({
           method: 'delete',
           url: `users/${id}`
           // 要把token带过来
@@ -186,63 +218,82 @@ export default {
         this.$message.info('取消删除成功')
       })
     },
+    changeState(user) {
+      // console.log(users)
+      // 发送ajax
+      this.axios({
+        method: 'put',
+        url: `users/${user.id}/state/${user.mg_state}`
+      }).then(res => {
+        console.log(res.data)
+        if (res.meta.status === 200) {
+          this.$message.success('修改成功')
+        } else {
+          this.$message.error('修改失败')
+        }
+      })
+    },
     search() {
       // 搜索的时候，把当前页第一页
       this.currentPage = 1
       this.getUserList()
     },
-    changeState(user) {
-      this.axios({
-        method: 'put',
-        url: `/users/${user.id}/state/${user.mg_state}`
-        // headers: {
-        //   Authorization: localStorage.getItem('token')
-        // }
-      }).then(res => {
-        console.log(res)
-        if (res.meta.status === 200) {
-          // this.getUserList()
-          this.$message.success('修改状态成功了')
-        } else {
-          this.$message.error('修改状态失败了')
-        }
-      })
+    showAddDialog() {
+      this.addDialogVisible = true
     },
     addUser() {
-      // 1. 表单校验功能
-      // 2. 发送ajax请求添加数据
-      // 3. 重新渲染  关闭模态框  重置样式
+      // 第一次发送前要进行表单验证功能
       this.$refs.addForm.validate(valid => {
         console.log(valid)
         if (!valid) return false
-        // 校验成功发送ajax
         this.axios({
           method: 'post',
           url: 'users',
           data: this.addForm
         }).then(res => {
-          let {
-            meta: { status, msg }
-          } = res
-          if (status === 201) {
+          console.log(res)
+          if (res.meta.status === 201) {
             this.total++
             this.currentPage = Math.ceil(this.total / this.pageSize)
-            // 重新渲染
             this.getUserList()
-            // 重置表单样式
             this.$refs.addForm.resetFields()
-            // 影藏模态框
             this.addDialogVisible = false
-            // 提示信息
             this.$message.success('添加成功')
           } else {
-            this.$message.error(msg)
+            this.$message.error('添加失败')
           }
         })
       })
     },
-    showAddDialog() {
-      this.addDialogVisible = true
+    showEditDialog(row) {
+      this.editDialogVisible = true
+      this.editForm.id = row.id
+      console.log(this.editForm.id)
+      this.editForm.username = row.username
+      this.editForm.mobile = row.mobile
+      this.editForm.email = row.email
+    },
+    editUser() {
+      // 在发送第一次ajax之前要进行表单校验
+      this.$refs.editForm.validate(valid => {
+        if (!valid) return false
+        // 发送ajax
+        this.axios({
+          method: 'put',
+          url: `user/${this.editForm.id}`,
+          data: this.editForm
+        }).then(res => {
+          console.log(res.data)
+          if (res.meta.status === 200) {
+            this.getUserList()
+            this.editDialogVisible = false
+            this.$refs.editForm.resetFields()
+            this.$message.success('成功了')
+          } else {
+            this.$message.error('失败了')
+          }
+        })
+      })
     }
   },
   created() {

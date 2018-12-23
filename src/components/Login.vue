@@ -28,7 +28,7 @@
 
 <script>
 // 导入axios
-import axios from 'axios'
+// import axios from 'axios'
 export default {
   data() {
     return {
@@ -58,7 +58,7 @@ export default {
       this.$refs.form.validate(valid => {
         if (valid) {
           // 发送ajax请求
-          axios({
+          this.axios({
             method: 'post',
             url: 'login',
             data: this.form
