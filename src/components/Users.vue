@@ -91,11 +91,11 @@
           <el-form-item label="用户名">
             <el-input v-model="editForm.username" placeholder="输入用户名" disabled></el-input>
           </el-form-item>
-          <el-form-item label="手机号" prop="mobile">
-            <el-input v-model="editForm.mobile" placeholder="输入合法手机号"></el-input>
-          </el-form-item>
           <el-form-item label="邮箱" prop="email">
             <el-input v-model="editForm.email" placeholder="输入邮箱"></el-input>
+          </el-form-item>
+          <el-form-item label="手机号" prop="mobile">
+            <el-input v-model="editForm.mobile" placeholder="输入合法手机号"></el-input>
           </el-form-item>
         </el-form>
         <span slot="footer" class="dialog-footer">
@@ -171,10 +171,7 @@ export default {
         //   Authorization: localStorage.getItem('token')
         // }
       }).then(res => {
-        let {
-          meta: { status },
-          data: { users, total }
-        } = res
+        let { meta: { status }, data: { users, total } } = res
         if (status === 200) {
           this.userList = users
           this.total = total
@@ -196,27 +193,29 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(() => {
-        return this.axios({
-          method: 'delete',
-          url: `users/${id}`
-          // 要把token带过来
-          // headers: {
-          //   Authorization: localStorage.getItem('token')
-          // }
-        }).then(res => {
-          if (res.meta.status === 200) {
-            // 若当前页只有一条数据则删除后显示上一页，并且要渲染上一页
-            if (this.userList.length <= 1 && this.currentPage > 1) {
-              this.currentPage--
-            }
-            this.getUserList()
-            this.$message.success('删除成功')
-          }
-        })
-      }).catch(() => {
-        this.$message.info('取消删除成功')
       })
+        .then(() => {
+          return this.axios({
+            method: 'delete',
+            url: `users/${id}`
+            // 要把token带过来
+            // headers: {
+            //   Authorization: localStorage.getItem('token')
+            // }
+          }).then(res => {
+            if (res.meta.status === 200) {
+              // 若当前页只有一条数据则删除后显示上一页，并且要渲染上一页
+              if (this.userList.length <= 1 && this.currentPage > 1) {
+                this.currentPage--
+              }
+              this.getUserList()
+              this.$message.success('删除成功')
+            }
+          })
+        })
+        .catch(() => {
+          this.$message.info('取消删除成功')
+        })
     },
     changeState(user) {
       // console.log(users)
@@ -268,10 +267,10 @@ export default {
     showEditDialog(row) {
       this.editDialogVisible = true
       this.editForm.id = row.id
-      console.log(this.editForm.id)
+      // console.log(this.editForm.id)
       this.editForm.username = row.username
-      this.editForm.mobile = row.mobile
       this.editForm.email = row.email
+      this.editForm.mobile = row.mobile
     },
     editUser() {
       // 在发送第一次ajax之前要进行表单校验
@@ -280,7 +279,7 @@ export default {
         // 发送ajax
         this.axios({
           method: 'put',
-          url: `user/${this.editForm.id}`,
+          url: `users/${this.editForm.id}`,
           data: this.editForm
         }).then(res => {
           console.log(res.data)
@@ -291,6 +290,7 @@ export default {
             this.$message.success('成功了')
           } else {
             this.$message.error('失败了')
+            console.log(res.data)
           }
         })
       })
@@ -303,7 +303,7 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.user{
+.user {
   height: 40px;
   // width: 200px;
   line-height: 40px;
@@ -311,7 +311,7 @@ export default {
   padding-left: 10px;
   margin-bottom: 5px;
 }
-.input-with-select{
+.input-with-select {
   width: 300px;
   margin-bottom: 5px;
 }
