@@ -65,7 +65,7 @@
             el-dialog：整个对话框组件
             visible： 对话框是否可见
           -->
-        <el-dialog title="添加用户" :visible.sync="addDialogVisible" width="40%">
+        <!-- <el-dialog title="添加用户" :visible.sync="addDialogVisible" width="40%">
           <el-form ref="addForm" :model="addForm" label-width="80px" :rules="rules" status-icon>
             <el-form-item label="用户名" prop="username">
               <el-input v-model="addForm.username" placeholder="请输入用户名"></el-input>
@@ -84,7 +84,27 @@
           <el-button @click="addDialogVisible = false">取 消</el-button>
           <el-button type="primary" @click="addUser">确 定</el-button>
         </span>
-      </el-dialog>
+        </el-dialog> -->
+        <el-dialog title="添加用户" :visible.sync="addDialogVisible" width="40%">
+          <el-form ref="addForm" :model="addForm" label-width="80px" :rules="rules" status-icon>
+            <el-form-item label="用户名" prop="username">
+            <el-input v-model="addForm.username" placeholder="请输入用户名" ></el-input>
+            </el-form-item>
+            <el-form-item label="密码" prop="password">
+            <el-input v-model="addForm.password" placeholder="请输入用密码" type="password"></el-input>
+            </el-form-item>
+            <el-form-item label="邮箱" prop="email">
+            <el-input v-model="addForm.email" placeholder="请输入邮箱" ></el-input>
+            </el-form-item>
+            <el-form-item label="手机" prop="mobile">
+            <el-input v-model="addForm.mobile" placeholder="请输入合法的手机号" ></el-input>
+            </el-form-item>
+          </el-form>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="addDialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="addUser">确 定</el-button>
+          </span>
+        </el-dialog>
       <!-- 修改用户 -->
       <el-dialog title="修改用户" :visible.sync="editDialogVisible" width="40%">
         <el-form ref="editForm" :model="editForm" label-width="80px" :rules="rules" status-icon>
@@ -240,10 +260,32 @@ export default {
     showAddDialog() {
       this.addDialogVisible = true
     },
+    // addUser() {
+    //   // 第一次发送前要进行表单验证功能
+    //   this.$refs.addForm.validate(valid => {
+    //     console.log(valid)
+    //     if (!valid) return false
+    //     this.axios({
+    //       method: 'post',
+    //       url: 'users',
+    //       data: this.addForm
+    //     }).then(res => {
+    //       console.log(res)
+    //       if (res.meta.status === 201) {
+    //         this.total++
+    //         this.currentPage = Math.ceil(this.total / this.pageSize)
+    //         this.getUserList()
+    //         this.$refs.addForm.resetFields()
+    //         this.addDialogVisible = false
+    //         this.$message.success('添加成功')
+    //       } else {
+    //         this.$message.error('添加失败')
+    //       }
+    //     })
+    //   })
+    // },
     addUser() {
-      // 第一次发送前要进行表单验证功能
       this.$refs.addForm.validate(valid => {
-        console.log(valid)
         if (!valid) return false
         this.axios({
           method: 'post',
@@ -252,11 +294,11 @@ export default {
         }).then(res => {
           console.log(res)
           if (res.meta.status === 201) {
-            this.total++
-            this.currentPage = Math.ceil(this.total / this.pageSize)
             this.getUserList()
             this.$refs.addForm.resetFields()
             this.addDialogVisible = false
+            this.total++
+            this.currentPage = Math.ceil(this.total / this.pageSize)
             this.$message.success('添加成功')
           } else {
             this.$message.error('添加失败')

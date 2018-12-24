@@ -1,15 +1,19 @@
-// 这里设置路由
 import Vue from 'vue'
 import Router from 'vue-router'
-import Login from '../components/Login'
-
+import Login from 'components/Login'
 // 导入home组件
-import Home from 'components/Home'
+import Home from '../components/Home'
+// 导入Users组件
+import Users from '../components/Users'
+// 导入Rights组件
+import Rights from '../components/Rights'
 
-// 导入user
-import Users from '../components/Users.vue'
 Vue.use(Router)
-
+/*
+  配置子路由：
+    1. 给某个路由配置children选项
+    2. 要在当前路由对应的组件中配置一个<router-view></router-view>
+*/
 const router = new Router({
   routes: [
     {
@@ -28,6 +32,10 @@ const router = new Router({
         {
           path: '/users',
           component: Users
+        },
+        {
+          path: '/rights',
+          component: Rights
         }
       ]
     }
