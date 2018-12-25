@@ -10,6 +10,7 @@
     <el-table :data="rolesList" style-width="100%;">
       <el-table-column type="expand">
         <template slot-scope="{row}">
+          <span v-if="row.children.length === 0">暂无权限</span>
           <!-- 显示一级分类 -->
           <el-row class="l1" v-for="l1 in row.children" :key="l1.id">
             <el-col :span="4">
@@ -48,10 +49,23 @@
             plain
             size="mini"
           ></el-button>
-          <el-button type="success" icon="el-icon-check" plain size="mini">分配角色</el-button>
+          <el-button type="success" icon="el-icon-check" plain size="mini" @click="showAssignDialog(scope.row)">分配权限</el-button>
         </template>
       </el-table-column>
     </el-table>
+    <!-- 分配权限对话框 -->
+    <el-dialog title="角色授权" :visible.sync="assignDialogVisible" width="40%">
+      <el-tree :data="data" :props="defaultProps" show-checkbox
+        ref="tree"
+        default-expand-all
+        node-key="id"
+      >
+      </el-tree>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="assignDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="assignRoles">分配</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -59,7 +73,14 @@
 export default {
   data() {
     return {
-      rolesList: []
+      rolesList: [],
+      assignDialogVisible: false,
+      data: [],
+      defaultProps: {
+        children: 'children',
+        label: 'authName'
+      },
+      roleId: ''
     }
   },
   methods: {
@@ -80,6 +101,52 @@ export default {
       if (status === 200) {
         role.children = data
         this.$message.success('成功了')
+      }
+    },
+    async showAssignDialog(role) {
+      // 显示对话框
+      this.roleId = role.id
+      this.assignDialogVisible = true
+      // 发送ajax请求，获取到所有的权限的数据
+      let res = await this.axios.get('rights/tree')
+      let {
+        meta: { status },
+        data
+      } = res
+      if (status === 200) {
+        this.data = data
+        console.log(this.data)
+      }
+      // 让节点选中
+      // 找到当前角色有拥有的所有的三级权限
+      // console.log(role)
+      let ids = []
+      role.children.forEach(l1 => {
+        l1.children.forEach(l2 => {
+          l2.children.forEach(l3 => {
+            ids.push(l3.id)
+          })
+        })
+      })
+      this.$refs.tree.setCheckedKeys(ids)
+    },
+    async assignRoles() {
+      let q = this.$refs.tree.getCheckedKeys()
+      let w = this.$refs.tree.getHalfCheckedKeys()
+      let rids = q.concat(w).join()
+      // 发送ajax
+      let res = await this.axios.post(`roles/${this.roleId}/rights`, {
+        rids
+      })
+      let {
+        meta: {status}
+      } = res
+      if (status === 200) {
+        this.getRolesList()
+        this.assignDialogVisible = false
+        this.$message.success('分配成功')
+      } else {
+        this.$message.error('分配失败')
       }
     }
   },
