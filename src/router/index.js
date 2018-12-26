@@ -4,11 +4,11 @@ import Login from 'components/Login'
 // 导入home组件
 import Home from '../components/Home'
 // 导入Users组件
-import Users from '../components/Users'
+import Users from '../components/users/Users.vue'
 // 导入Rights组件
-import Rights from '../components/Rights'
+import Rights from '../components/rights/Rights.vue'
 // 导入Roles组件
-import Roles from '../components/Roles'
+import Roles from '../components/rights/Roles.vue'
 
 Vue.use(Router)
 /*

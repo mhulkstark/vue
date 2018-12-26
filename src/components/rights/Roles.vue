@@ -6,6 +6,22 @@
       <el-breadcrumb-item>艾欧尼亚</el-breadcrumb-item>
       <el-breadcrumb-item>诺克萨斯</el-breadcrumb-item>
     </el-breadcrumb>
+    <!-- 添加分类按钮 -->
+    <el-button type="success" plain @click="showAddDialog">添加角色</el-button>
+      <el-dialog :title="this.addForm.id? '修改角色':'添加角色'" :visible.sync="addDialogVisible" width="40%">
+        <el-form :rules="rules" ref="addForm" :model="addForm" label-width="80px">
+          <el-form-item label="校色名称" prop="roleName">
+            <el-input v-model="addForm.roleName" placeholder="请输入角色名"></el-input>
+          </el-form-item>
+          <el-form-item label="校色描述" prop="roleDesc">
+            <el-input v-model="addForm.roleDesc" placeholder="请输入描述"></el-input>
+          </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="addDialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="saveRoles">确定</el-button>
+        </span>
+      </el-dialog>
     <!-- 表格组件 -->
     <el-table :data="rolesList" style-width="100%;">
       <el-table-column type="expand">
@@ -37,7 +53,6 @@
       </el-table-column>
       <el-table-column type="index"></el-table-column>
       <el-table-column prop="roleName" label="校色名称"></el-table-column>
-      <el-table-column prop="roleDesc" label="描述"></el-table-column>
       <el-table-column prop="roleDesc" label="描述"></el-table-column>
       <el-table-column label="操作">
         <template slot-scope="scope">
@@ -80,7 +95,21 @@ export default {
         children: 'children',
         label: 'authName'
       },
-      roleId: ''
+      roleId: '',
+      addDialogVisible: false,
+      addForm: {
+        id: '',
+        roleName: '',
+        roleDesc: ''
+      },
+      rules: {
+        roleName: [
+          {required: true, message: '输入角色名称', trigger: 'change'}
+        ],
+        rolesDesc: [
+          {required: true, message: '输入描述', trigger: 'change'}
+        ]
+      }
     }
   },
   methods: {
@@ -147,6 +176,64 @@ export default {
         this.$message.success('分配成功')
       } else {
         this.$message.error('分配失败')
+      }
+    },
+    // 添加分类
+    showAddDialog() {
+      this.addDialogVisible = true
+      this.addForm.roleName = ''
+      this.addForm.roleDesc = ''
+      this.addForm.id = ''
+    },
+    // 添加或修改角色
+    saveRoles() {
+      this.$refs.addForm.validate(async valid => {
+        if (!valid) return false
+        // 2.发送ajax请求
+        // 请求方式 post  put
+        // 请求地址 'roles'     'roles/id'
+        // 响应结果： 201       200
+        let id = this.addForm.id
+        let url = id ? `roles/${id}` : `roles`
+        let method = id ? 'put' : 'post'
+        let status = id ? 200 : 201
+        let res = await this.axios({
+          method,
+          url,
+          data: this.addForm
+        })
+        if (res.meta.status === status) {
+          this.$refs.addForm.resetFields()
+          this.addDialogVisible = false
+          this.getRolesList()
+          this.$message.success('成功')
+        } else {
+          this.$message.error('失败')
+        }
+      })
+    },
+    showEditDialog(role) {
+      this.addDialogVisible = true
+      // 回显数据
+      this.addForm.roleName = role.roleName
+      this.addForm.roleDesc = role.roleDesc
+      this.addForm.id = role.id
+    },
+    // 删除角色
+    async delUser(id) {
+      try {
+        await this.$confirm('你确定要删除么？', '温馨提示', {
+          type: 'warning'
+        })
+        // 发送ajax
+        let res = await this.axios.delete(`roles/${id}`)
+        if (res.meta.status === 200) {
+          // 删除成功
+          this.getRolesList()
+          this.$message.success('删除成功')
+        }
+      } catch (e) {
+        this.$message.info('删除失败')
       }
     }
   },

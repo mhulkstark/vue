@@ -38,7 +38,30 @@
             plain
             size="mini"
           ></el-button>
-          <el-button type="success" icon="el-icon-check" plain size="mini">分配角色</el-button>
+          <el-button type="success" icon="el-icon-check" @click="showAssignDialog(scope.row)" plain size="mini">分配角色</el-button>
+          <!-- 分配角色 -->
+          <el-dialog title="分配角色" :visible.sync="assignDialogVisible" width="40%">
+            <el-form ref="assignForm" :model="assignForm" label-width="80px" :rules="rules" status-icon>
+              <el-form-item label="用户名">
+                <el-tag type="info">{{assignForm.username}}</el-tag>
+              </el-form-item>
+              <el-form-item label="角色列表">
+                  <el-select v-model="assignForm.rid" placeholder="请选择">
+                    <!-- options:需要是角色的列表  -->
+                    <el-option
+                      v-for="item in roleList"
+                      :key="item.id"
+                      :label="item.roleName"
+                      :value="item.id">
+                    </el-option>
+                  </el-select>
+              </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+              <el-button @click="assignDialogVisible = false">取 消</el-button>
+              <el-button type="primary" @click="assignRole">确 定</el-button>
+            </span>
+          </el-dialog>
         </template>
       </el-table-column>
     </el-table>
@@ -172,7 +195,14 @@ export default {
         username: '',
         email: '',
         mobile: ''
-      }
+      },
+      assignDialogVisible: false,
+      assignForm: {
+        id: '',
+        username: '',
+        rid: ''
+      },
+      roleList: []
     }
   },
   methods: {
@@ -336,6 +366,45 @@ export default {
           }
         })
       })
+    },
+    async getUserInfo(id) {
+      let res = await this.axios.get(`users/${id}`)
+      if (res.meta.data === 200) {
+        let rid = res.meta.rid
+        if (rid === -1) {
+          rid = ''
+        }
+        this.assignForm.rid = rid
+      }
+    },
+    async showAssignDialog(user) {
+      this.assignDialogVisible = true
+      this.assignForm.username = user.username
+      this.assignForm.id = user.id
+      // 发送ajax
+      // 根据用户id查询角色id
+      this.getUserInfo(user.id)
+      // 获取角色列表
+      let res = await this.axios.get('roles')
+      if (res.meta.status === 200) {
+        this.roleList = res.data
+        console.log(res.roleList)
+      }
+    },
+    async assignRole() {
+      if (!this.assignForm.rid) {
+        this.$message.error('请选择一个角色')
+        return
+      }
+      let res = await this.axios.put(`users/${this.assignForm.id}/role`, {
+        rid: this.assignForm.rid
+      })
+      if (res.meta.status === 200) {
+        this.$refs.assignForm.resetFields()
+        this.assignDialogVisible = false
+        this.getUserList()
+        this.$message.success('分配成功')
+      }
     }
   },
   created() {
